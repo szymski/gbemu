@@ -1,0 +1,13 @@
+{
+	"name": "gbemu",
+	"authors": [
+		"Szymon Jankowski"
+	],
+	"description": "Game Boy Emulator",
+	"copyright": "Copyright © 2016, Szymon Jankowski",
+	"license": "MIT",
+	"dependencies": {
+		"derelict-sdl2": "~>2.0.0",
+		"derelict-gl3": "~>1.0.18"
+	}
+}
