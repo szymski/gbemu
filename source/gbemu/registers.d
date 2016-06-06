@@ -114,4 +114,22 @@ unittest {
 	registers.h = 0x12;
 	registers.l = 0x34;
 	assert(registers.hl == 0x1234);
+
+	registers.flagZero = true;
+	assert(registers.flagZero);
+
+	registers.flagCarry = true;
+	assert(registers.flagCarry);
+
+	registers.flagHalfCarry = true;
+	assert(registers.flagHalfCarry);
+
+	registers.flagNegative = true;
+	assert(registers.flagNegative);
+
+	registers.flagCarry = false;
+	assert(registers.flagZero);
+	assert(!registers.flagCarry);
+	assert(registers.flagHalfCarry);
+	assert(registers.flagNegative);
 }

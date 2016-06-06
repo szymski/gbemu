@@ -3,6 +3,8 @@
 import std.experimental.logger, std.format, std.stdio, std.conv : to;
 import gbemu.emulator, gbemu.registers, gbemu.memory;
 
+enum fixedCycleCount = 20;
+
 class Instruction {
 	string disassembly;
 	ubyte length;
@@ -19,7 +21,7 @@ class Cpu
 {
 	Emulator emulator;
 	Memory memory;
-
+	 
 	Registers registers;
 
 	Instruction[256] instructions;
@@ -158,6 +160,70 @@ class Cpu
 		registerInstruction!(0x6E, "LD L, (HL)", 0)(&ld_reg_regptr!("l", "hl"));
 		registerInstruction!(0x6F, "LD L, A", 0)(&ld_reg_reg!("l", "a"));
 
+		registerInstruction!(0x70, "LD (HL), B", 0)(&ld_regptr_reg!("hl", "b"));
+		registerInstruction!(0x71, "LD (HL), C", 0)(&ld_regptr_reg!("hl", "c"));
+		registerInstruction!(0x72, "LD (HL), D", 0)(&ld_regptr_reg!("hl", "d"));
+		registerInstruction!(0x73, "LD (HL), E", 0)(&ld_regptr_reg!("hl", "e"));
+		registerInstruction!(0x74, "LD (HL), H", 0)(&ld_regptr_reg!("hl", "h"));
+		registerInstruction!(0x75, "LD (HL), L", 0)(&ld_regptr_reg!("hl", "l"));
+
+		registerInstruction!(0x76, "HALT", 0)(&halt);
+
+		registerInstruction!(0x77, "LD (HL), A", 0)(&ld_regptr_reg!("hl", "a"));
+		registerInstruction!(0x78, "LD A, B", 0)(&ld_reg_reg!("a", "b"));
+		registerInstruction!(0x79, "LD A, C", 0)(&ld_reg_reg!("a", "c"));
+		registerInstruction!(0x7A, "LD A, D", 0)(&ld_reg_reg!("a", "d"));
+		registerInstruction!(0x7B, "LD A, E", 0)(&ld_reg_reg!("a", "e"));
+		registerInstruction!(0x7C, "LD A, H", 0)(&ld_reg_reg!("a", "h"));
+		registerInstruction!(0x7D, "LD A, L", 0)(&ld_reg_reg!("a", "l"));
+		registerInstruction!(0x7E, "LD A, (HL)", 0)(&ld_reg_regptr!("a", "hl"));
+		registerInstruction!(0x7F, "LD A, A", 0)(&nop);
+
+		registerInstruction!(0x80, "ADD A, B", 0)(&add_reg_reg!("a", "b"));
+		registerInstruction!(0x81, "ADD A, C", 0)(&add_reg_reg!("a", "c"));
+		registerInstruction!(0x82, "ADD A, D", 0)(&add_reg_reg!("a", "d"));
+		registerInstruction!(0x83, "ADD A, E", 0)(&add_reg_reg!("a", "e"));
+		registerInstruction!(0x84, "ADD A, H", 0)(&add_reg_reg!("a", "h"));
+		registerInstruction!(0x85, "ADD A, L", 0)(&add_reg_reg!("a", "l"));
+		registerInstruction!(0x86, "ADD A, (HL)", 0)(&add_reg_regptr!("a", "hl"));
+		registerInstruction!(0x87, "ADD A, A", 0)(&add_reg_reg!("a", "a"));
+
+		registerInstruction!(0x88, "ADC A, B", 0)(&adc_a_reg!"b");
+		registerInstruction!(0x89, "ADC A, C", 0)(&adc_a_reg!"c");
+		registerInstruction!(0x8A, "ADC A, D", 0)(&adc_a_reg!"d");
+		registerInstruction!(0x8B, "ADC A, E", 0)(&adc_a_reg!"e");
+		registerInstruction!(0x8C, "ADC A, H", 0)(&adc_a_reg!"h");
+		registerInstruction!(0x8D, "ADC A, L", 0)(&adc_a_reg!"l");
+		registerInstruction!(0x8E, "ADC A, (HL)", 0)(&adc_a_regptr!"hl");
+		registerInstruction!(0x8F, "ADC A, A", 0)(&adc_a_reg!"a");
+
+		registerInstruction!(0x90, "SUB A, B", 0)(&sub_a_reg!"b");
+		registerInstruction!(0x91, "SUB A, C", 0)(&sub_a_reg!"c");
+		registerInstruction!(0x92, "SUB A, D", 0)(&sub_a_reg!"d");
+		registerInstruction!(0x93, "SUB A, E", 0)(&sub_a_reg!"e");
+		registerInstruction!(0x94, "SUB A, H", 0)(&sub_a_reg!"h");
+		registerInstruction!(0x95, "SUB A, L", 0)(&sub_a_reg!"l");
+		registerInstruction!(0x96, "SUB A, (HL)", 0)(&sub_a_regptr!"hl");
+		registerInstruction!(0x97, "SUB A, A", 0)(&sub_a_reg!"a");
+
+		registerInstruction!(0x98, "SBC A, B", 0)(&sbc_a_reg!"b");
+		registerInstruction!(0x99, "SBC A, C", 0)(&sbc_a_reg!"c");
+		registerInstruction!(0x9A, "SBC A, D", 0)(&sbc_a_reg!"d");
+		registerInstruction!(0x9B, "SBC A, E", 0)(&sbc_a_reg!"e");
+		registerInstruction!(0x9C, "SBC A, H", 0)(&sbc_a_reg!"h");
+		registerInstruction!(0x9D, "SBC A, L", 0)(&sbc_a_reg!"l");
+		registerInstruction!(0x9E, "SBC A, (HL)", 0)(&sbc_a_regptr!"hl");
+		registerInstruction!(0x9F, "SBC A, A", 0)(&sbc_a_reg!"a");
+
+		registerInstruction!(0xA0, "AND A, B", 0)(&and_a_reg!"a");
+		registerInstruction!(0xA1, "AND A, B", 0)(&and_a_reg!"a");
+		registerInstruction!(0xA2, "AND A, B", 0)(&and_a_reg!"a");
+		registerInstruction!(0xA3, "AND A, B", 0)(&and_a_reg!"a");
+		registerInstruction!(0xA4, "AND A, B", 0)(&and_a_reg!"a");
+		registerInstruction!(0xA5, "AND A, B", 0)(&and_a_reg!"a");
+		registerInstruction!(0xA6, "AND A, B", 0)(&and_a_reg!"a");
+		registerInstruction!(0xA7, "AND A, B", 0)(&and_a_reg!"a");
+
 		registerInstruction!(0xC3, "JP 0x%X", 2)(&jp_nn);
 	}
 
@@ -166,6 +232,8 @@ class Cpu
 			static assert(is(typeof(execute) : void delegate(ubyte)), "Invalid delegate type. For operand size 1, it must be void delegate(ubyte).");
 		static if(length == 2)
 			static assert(is(typeof(execute) : void delegate(ushort)), "Invalid delegate type. For operand size 2, it must be void delegate(ushort).");
+
+		assert(instructions[opcode] is null, "Instruction already registered.");
 
 		instructions[opcode] = new Instruction(disassembly, length, cast(void delegate())execute);
 	}
@@ -206,12 +274,12 @@ class Cpu
 
 	// LDI (reg), reg
 	void ldi_regptr_reg(string register1, string register2)(ushort value) {
-		mixin(`memory[registers.` ~ register1 ~ `++] = registers.` ~ register2 ~ `;`);
+		mixin(`memory[registers.` ~ register1 ~ `] = registers.` ~ register2 ~ `; registers.` ~ register1 ~ ` = inc(registers.` ~ register1 ~ `);`);
 	}
 
 	// LDD (reg), reg
 	void ldd_regptr_reg(string register1, string register2)(ushort value) {
-		mixin(`memory[registers.` ~ register1 ~ `--] = registers.` ~ register2 ~ `;`);
+		mixin(`memory[registers.` ~ register1 ~ `] = registers.` ~ register2 ~ `; registers.` ~ register1 ~ ` = dec(registers.` ~ register1 ~ `);`);
 	}
 
 	// LD reg, reg
@@ -226,12 +294,12 @@ class Cpu
 
 	// LDI reg, (reg)
 	void ldi_reg_regptr(string register1, string register2)() {
-		mixin(`registers.` ~ register1 ~ ` = memory[registers.` ~ register2 ~ `++];`);
+		mixin(`registers.` ~ register1 ~ ` = memory[registers.` ~ register2 ~ `]; registers.` ~ register2 ~ ` = inc(registers.` ~ register2 ~ `);`);
 	}
 
 	// LDD reg, (reg)
 	void ldd_reg_regptr(string register1, string register2)() {
-		mixin(`registers.` ~ register1 ~ ` = memory[registers.` ~ register2 ~ `--];`);
+		mixin(`registers.` ~ register1 ~ ` = memory[registers.` ~ register2 ~ `]; registers.` ~ register2 ~ ` = dec(registers.` ~ register2 ~ `);`);
 	}
 
 	// LD (nn), reg
@@ -241,32 +309,72 @@ class Cpu
 
 	// INC reg
 	void inc_reg(string register)() {
-		// TODO: Flags
-		mixin(`registers.` ~ register ~ `++;`);
+		mixin(`registers.` ~ register ~ ` = inc(registers.` ~ register ~ `);`);
 	}
 
 	// DEC reg
 	void dec_reg(string register)() {
-		// TODO: Flags
-		mixin(`registers.` ~ register ~ `--;`);
+		mixin(`registers.` ~ register ~ ` = dec(registers.` ~ register ~ `);`);
 	}
 
 	// ADD reg, reg
 	void add_reg_reg(string register1, string register2)() {
-		// TODO: Flags
-		mixin(`registers.` ~ register1 ~ ` += registers.` ~ register2 ~ `;`);
+		mixin(`registers.` ~ register1 ~ ` = add(registers.` ~ register1 ~ `, registers.` ~ register2 ~ `);`);
+	}
+
+	// ADD reg, regptr
+	void add_reg_regptr(string register1, string register2)() {
+		mixin(`registers.` ~ register1 ~ ` = add(registers.` ~ register1 ~ `, cast(ubyte)memory[registers.` ~ register2 ~ `]);`);
 	}
 
 	// INC regptr
 	void inc_regptr(string register)() {
-		// TODO: Flags
-		mixin(`memory[registers.` ~ register ~ `] = cast(ubyte)(memory[registers.` ~ register ~ `] + 1);`);
+		mixin(`memory[registers.` ~ register ~ `] = cast(ubyte)(inc(memory[registers.` ~ register ~ `]));`);
 	}
 
 	// DEC regptr
 	void dec_regptr(string register)() {
-		// TODO: Flags
-		mixin(`memory[registers.` ~ register ~ `] = cast(ubyte)(memory[registers.` ~ register ~ `] - 1);`);
+		mixin(`memory[registers.` ~ register ~ `] = cast(ubyte)(dec(memory[registers.` ~ register ~ `]));`);
+	}
+
+	// ADC A, reg
+	void adc_a_reg(string register)() {
+		mixin(`adc_a(registers.` ~ register ~ `);`);
+	}
+
+	// ADC A, regptr
+	void adc_a_regptr(string register)() {
+		mixin(`adc_a(memory[registers.` ~ register ~ `]);`);
+	}
+
+	// SUB A, reg
+	void sub_a_reg(string register)() {
+		mixin(`sub_a(registers.` ~ register ~ `);`);
+	}
+
+	// SUB A, regptr
+	void sub_a_regptr(string register)() {
+		mixin(`sub_a(memory[registers.` ~ register ~ `]);`);
+	}
+
+	// SBC A, reg
+	void sbc_a_reg(string register)() {
+		mixin(`sbc_a(registers.` ~ register ~ `);`);
+	}
+	
+	// SBC A, regptr
+	void sbc_a_regptr(string register)() {
+		mixin(`sbc_a(memory[registers.` ~ register ~ `]);`);
+	}
+
+	// AND A, reg
+	void and_a_reg(string register)() {
+		mixin(`and_a(registers.` ~ register ~ `);`);
+	}
+
+	// AND A, regptr
+	void and_a_regptr(string register)() {
+		mixin(`and_a(memory[registers.` ~ register ~ `]);`);
 	}
 
 	// RLCA
@@ -377,9 +485,103 @@ class Cpu
 		registers.flagNegative = false;
 	}
 
+	// HALT
+	void halt() {
+		// TODO: Halt
+	}
+
+	/*
+	 * Instruction handler helpers
+	 */
+
+	auto inc(T)(T value) {
+		registers.flagHalfCarry = (value & 0x0F) == 0x0F;
+		
+		value++;
+		
+		registers.flagZero = value == 0;
+		registers.flagNegative = false; // TODO: Make sure this is proper
+
+		return value;
+	}
+
+	auto dec(T)(T value) {
+		registers.flagHalfCarry = (value & 0x0F) != 0;
+
+		value--;
+
+		registers.flagZero = value == 0;
+		registers.flagNegative = true; // TODO: Make sure this is proper
+
+		return value;
+	}
+
+	T add(T)(T value1, T value2) {
+		uint result = value1 + value2;
+
+		registers.flagZero = result == 0;
+		registers.flagNegative = false;
+		registers.flagHalfCarry = ((result & 0x0F) + (value2 & 0x0F)) > 0x0F;
+
+		static if(is(T : ubyte)) {
+			registers.flagCarry = (result & 0xFFFFFF00) != 0;
+			return cast(ubyte)(result & 0xFF);
+		}
+		else static if(is(T : ushort)) {
+			registers.flagCarry = (result & 0xFFFF0000) != 0;
+			return cast(ushort)(result & 0xFFFF);
+		}
+	}
+
+	void adc_a(T)(T value) {
+		value += registers.flagCarry ? 1 : 0;
+
+		int result = cast(int)registers.a + value;
+
+		registers.flagCarry = (result & 0xFF00) != 0;
+		registers.flagHalfCarry = ((value & 0xF) + (registers.a & 0xF)) != 0;
+		registers.flagZero = value == 0;
+		registers.flagNegative = false;
+	}
+
+	void sub_a(T)(T value) {
+		registers.flagNegative = true;
+		registers.flagCarry = value > registers.a;
+		registers.flagHalfCarry = (value & 0x0F) > (registers.a & 0x0f);
+
+		registers.a -= value;
+
+		registers.flagZero = registers.a == 0;
+	}
+
+	void sbc_a(T)(T value) {
+		value += registers.flagCarry ? 1 : 0;
+
+		registers.flagCarry = value > registers.a;
+		registers.flagHalfCarry = ((value & 0xF) > (registers.a & 0xF)) != 0;
+		registers.flagZero = value == registers.a;
+		registers.flagNegative = true;
+
+		registers.a -= value;
+	}
+
+	void and_a(T)(T value) {
+		registers.a &= value;
+
+		registers.flagCarry = false;
+		registers.flagNegative = false;
+		registers.flagHalfCarry = true;
+		registers.flagZero = registers.a == 0;
+	}
+
 	/*
 	 * End Instruction handlers
 	 */
+
+	void doFixedCycleCount() {
+		foreach(i; 0 .. fixedCycleCount)
+			doCycle();
+	}
 
 	void doCycle() {
 		auto opcode = memory[registers.pc];

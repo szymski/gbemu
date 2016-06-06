@@ -1,7 +1,7 @@
 ﻿module gbemu.emulator;
 
-import std.stdio, std.datetime, std.file, core.thread, std.experimental.logger, derelict.sdl2.sdl, derelict.opengl3.gl;
-import gbemu.cpu, gbemu.memory;
+import std.stdio, std.datetime, std.file, std.string, core.thread, std.experimental.logger, derelict.sdl2.sdl, derelict.opengl3.gl;
+import gbemu.cpu, gbemu.memory, gbemu.screen;
 
 class Emulator
 {
@@ -12,11 +12,15 @@ class Emulator
 
 	Cpu cpu;
 	Memory memory;
+	Screen screen;
+	ScreenRenderer screenRenderer;
 
 	this()
 	{
 		prepareLogger();
 		memory = new Memory();
+		screen = new Screen(memory);
+		screenRenderer = new ScreenRenderer(screen);
 		cpu = new Cpu(this);
 	}
 
@@ -50,6 +54,7 @@ class Emulator
 		
 		log("Creating window");
 		SDL_CreateWindowAndRenderer(800, 600, SDL_WINDOW_OPENGL, &window, &renderer);
+		SDL_SetWindowTitle(window, "Gay Boy Emulator".toStringz);
 		log("Creating OpenGL context");
 		SDL_GL_CreateContext(window);
 	}
@@ -59,7 +64,7 @@ class Emulator
 		
 		while(running) {
 			updateEvents();
-			cpu.doCycle();
+			cpu.doFixedCycleCount();
 			render();
 			limitFps();
 		}
@@ -84,15 +89,7 @@ class Emulator
 		glClearColor(0.1f, 0.1f, 0.1f, 1f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glViewport(0, 0, 800, 600);
-		glOrtho(0, 800, 0, 600, -1, 1);
-		glMatrixMode(GL_MODELVIEW);
-		
-		glRasterPos3f(0, 600, 0);
-		glPixelZoom(5f, -5f);
-		//glDrawPixels(screen.width, screen.height, GL_GREEN, GL_UNSIGNED_BYTE, screen.dataPointer);
+		screenRenderer.render();
 		
 		SDL_GL_SwapWindow(window);
 	}
@@ -120,7 +117,7 @@ class Emulator
 	void loadRom(ubyte[] data) {
 		import std.conv : to;
 		assert(data.length <= 0x8000, "ROM too big. Size below 0x8000 expected. Got 0x" ~ data.length.to!string(16) ~ ".");
-		memory.cartridge[0 .. data.length] = data;
+		memory.loadRom(data);
 	}
 }
 
