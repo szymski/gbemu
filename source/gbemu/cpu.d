@@ -215,16 +215,68 @@ class Cpu
 		registerInstruction!(0x9E, "SBC A, (HL)", 0)(&sbc_a_regptr!"hl");
 		registerInstruction!(0x9F, "SBC A, A", 0)(&sbc_a_reg!"a");
 
-		registerInstruction!(0xA0, "AND A, B", 0)(&and_a_reg!"a");
-		registerInstruction!(0xA1, "AND A, B", 0)(&and_a_reg!"a");
-		registerInstruction!(0xA2, "AND A, B", 0)(&and_a_reg!"a");
-		registerInstruction!(0xA3, "AND A, B", 0)(&and_a_reg!"a");
-		registerInstruction!(0xA4, "AND A, B", 0)(&and_a_reg!"a");
-		registerInstruction!(0xA5, "AND A, B", 0)(&and_a_reg!"a");
-		registerInstruction!(0xA6, "AND A, B", 0)(&and_a_reg!"a");
-		registerInstruction!(0xA7, "AND A, B", 0)(&and_a_reg!"a");
+		registerInstruction!(0xA0, "AND A, B", 0)(&and_a_reg!"b");
+		registerInstruction!(0xA1, "AND A, C", 0)(&and_a_reg!"c");
+		registerInstruction!(0xA2, "AND A, D", 0)(&and_a_reg!"d");
+		registerInstruction!(0xA3, "AND A, E", 0)(&and_a_reg!"e");
+		registerInstruction!(0xA4, "AND A, H", 0)(&and_a_reg!"h");
+		registerInstruction!(0xA5, "AND A, L", 0)(&and_a_reg!"l");
+		registerInstruction!(0xA6, "AND A, (HL)", 0)(&and_a_regptr!"hl");
+		registerInstruction!(0xA7, "AND A, A", 0)(&and_a_reg!"a");
 
+		registerInstruction!(0xA8, "XOR A, B", 0)(&xor_a_reg!"b");
+		registerInstruction!(0xA9, "XOR A, C", 0)(&xor_a_reg!"c");
+		registerInstruction!(0xAA, "XOR A, D", 0)(&xor_a_reg!"d");
+		registerInstruction!(0xAB, "XOR A, E", 0)(&xor_a_reg!"e");
+		registerInstruction!(0xAC, "XOR A, H", 0)(&xor_a_reg!"h");
+		registerInstruction!(0xAD, "XOR A, L", 0)(&xor_a_reg!"l");
+		registerInstruction!(0xAE, "XOR A, (HL)", 0)(&xor_a_regptr!"hl");
+		registerInstruction!(0xAF, "XOR A, A", 0)(&xor_a_reg!"a");
+
+		registerInstruction!(0xB0, "OR A, B", 0)(&or_a_reg!"b");
+		registerInstruction!(0xB1, "OR A, C", 0)(&or_a_reg!"c");
+		registerInstruction!(0xB2, "OR A, D", 0)(&or_a_reg!"d");
+		registerInstruction!(0xB3, "OR A, E", 0)(&or_a_reg!"e");
+		registerInstruction!(0xB4, "OR A, H", 0)(&or_a_reg!"h");
+		registerInstruction!(0xB5, "OR A, L", 0)(&or_a_reg!"l");
+		registerInstruction!(0xB6, "OR A, (HL)", 0)(&or_a_regptr!"hl");
+		registerInstruction!(0xB7, "OR A, A", 0)(&or_a_reg!"a");
+
+		registerInstruction!(0xB8, "CP A, B", 0)(&cp_a_reg!"b");
+		registerInstruction!(0xB9, "CP A, C", 0)(&cp_a_reg!"c");
+		registerInstruction!(0xBA, "CP A, D", 0)(&cp_a_reg!"d");
+		registerInstruction!(0xBB, "CP A, E", 0)(&cp_a_reg!"e");
+		registerInstruction!(0xBC, "CP A, H", 0)(&cp_a_reg!"h");
+		registerInstruction!(0xBD, "CP A, L", 0)(&cp_a_reg!"l");
+		registerInstruction!(0xBE, "CP A, (HL)", 0)(&cp_a_regptr!"hl");
+		registerInstruction!(0xBF, "CP A, A", 0)(&cp_a_reg!"a");
+
+		registerInstruction!(0xC0, "RET NZ", 0)(&ret_nz);
+		registerInstruction!(0xC1, "POP BC", 0)(&pop_reg!"bc");
+		registerInstruction!(0xC2, "JP NZ, 0x%X", 2)(&jp_nz_nn);
 		registerInstruction!(0xC3, "JP 0x%X", 2)(&jp_nn);
+		registerInstruction!(0xC4, "CALL NZ, 0x%X", 2)(&call_nz_nn);
+		registerInstruction!(0xC5, "PUSH BC", 0)(&push_reg!"bc");
+		registerInstruction!(0xC6, "ADD A, 0x%X", 1)(&add_reg_n!"a");
+		registerInstruction!(0xC7, "RST 0x00", 0)(&rst!0x00);
+		registerInstruction!(0xC8, "RET Z", 0)(&ret_z);
+		registerInstruction!(0xC9, "RET", 0)(&ret);
+		registerInstruction!(0xCA, "JP Z, 0x%X", 2)(&jp_z_nn);
+		registerInstruction!(0xCB, "CB 0x%X", 1)(&cb_n);
+		registerInstruction!(0xCC, "CALL Z, 0x%X", 2)(&call_z_nn);
+		registerInstruction!(0xCD, "CALL 0x%X", 2)(&call_nn);
+		registerInstruction!(0xCE, "ADC 0x%X", 1)(&adc_a_n);
+		registerInstruction!(0xCF, "RST 0x08", 0)(&rst!0x08);
+		registerInstruction!(0xD0, "RET NC", 0)(&ret_nc);
+		registerInstruction!(0xD1, "POP DE", 0)(&pop_reg!"de");
+		registerInstruction!(0xD2, "JP NC, 0x%X", 2)(&jp_nc_nn);
+		registerInstruction!(0xD3, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xD4, "CALL NC, 0x%X", 2)(&call_nc_nn);
+		registerInstruction!(0xD5, "PUSH DE", 0)(&push_reg!"de");
+		registerInstruction!(0xD6, "SUB 0x%X", 1)(&sub_a_n);
+		registerInstruction!(0xD7, "RST 0x10", 0)(&rst!0x10);
+		registerInstruction!(0xD8, "RET C", 0)(&ret_c);
+		registerInstruction!(0xD9, "RETI", 0)(&reti);
 	}
 
 	void registerInstruction(ubyte opcode, string disassembly, ubyte length, T...)(void delegate(T) execute) {
@@ -327,6 +379,11 @@ class Cpu
 		mixin(`registers.` ~ register1 ~ ` = add(registers.` ~ register1 ~ `, cast(ubyte)memory[registers.` ~ register2 ~ `]);`);
 	}
 
+	// ADD reg, n
+	void add_reg_n(string register1)(ubyte value) {
+		mixin(`registers.` ~ register1 ~ ` = add(registers.` ~ register1 ~ `, value);`);
+	}
+
 	// INC regptr
 	void inc_regptr(string register)() {
 		mixin(`memory[registers.` ~ register ~ `] = cast(ubyte)(inc(memory[registers.` ~ register ~ `]));`);
@@ -347,6 +404,11 @@ class Cpu
 		mixin(`adc_a(memory[registers.` ~ register ~ `]);`);
 	}
 
+	// ADC A, n
+	void adc_a_n(ubyte value) {
+		mixin(`adc_a(value);`);
+	}
+
 	// SUB A, reg
 	void sub_a_reg(string register)() {
 		mixin(`sub_a(registers.` ~ register ~ `);`);
@@ -355,6 +417,11 @@ class Cpu
 	// SUB A, regptr
 	void sub_a_regptr(string register)() {
 		mixin(`sub_a(memory[registers.` ~ register ~ `]);`);
+	}
+
+	// SUB A, n
+	void sub_a_n(ubyte value) {
+		sub_a(value);
 	}
 
 	// SBC A, reg
@@ -375,6 +442,36 @@ class Cpu
 	// AND A, regptr
 	void and_a_regptr(string register)() {
 		mixin(`and_a(memory[registers.` ~ register ~ `]);`);
+	}
+
+	// XOR A, reg
+	void xor_a_reg(string register)() {
+		mixin(`xor_a(registers.` ~ register ~ `);`);
+	}
+	
+	// XOR A, regptr
+	void xor_a_regptr(string register)() {
+		mixin(`xor_a(memory[registers.` ~ register ~ `]);`);
+	}
+
+	// OR A, reg
+	void or_a_reg(string register)() {
+		mixin(`or_a(registers.` ~ register ~ `);`);
+	}
+	
+	// OR A, regptr
+	void or_a_regptr(string register)() {
+		mixin(`or_a(memory[registers.` ~ register ~ `]);`);
+	}
+
+	// CP A, reg
+	void cp_a_reg(string register)() {
+		mixin(`cp_a(registers.` ~ register ~ `);`);
+	}
+	
+	// CP A, regptr
+	void cp_a_regptr(string register)() {
+		mixin(`cp_a(memory[registers.` ~ register ~ `]);`);
 	}
 
 	// RLCA
@@ -437,11 +534,6 @@ class Cpu
 		}
 	}
 
-	// JP nn
-	void jp_nn(ushort address) {
-		registers.pc = address;
-	}
-
 	// DAA
 	void daa() {
 		if(registers.flagNegative) {
@@ -488,6 +580,114 @@ class Cpu
 	// HALT
 	void halt() {
 		// TODO: Halt
+	}
+
+	// RET NZ
+	void ret_nz() {
+		if(!registers.flagZero)
+			registers.pc = stackPop!ushort;
+	}
+
+	// POP reg
+	void pop_reg(string register)() {
+		mixin("registers." ~ register ~ " = stackPop!(typeof(registers." ~ register ~ "));");
+	}
+
+	// PUSH reg
+	void push_reg(string register)() {
+		mixin("stackPush(registers." ~ register ~ ");");
+	}
+
+	// JP nz, nn
+	void jp_nz_nn(ushort address) {
+		if(!registers.flagZero)
+			registers.pc = address;
+	}
+
+	// JP nn
+	void jp_nn(ushort address) {
+		registers.pc = address;
+	}
+
+	// CALL NZ, nn
+	void call_nz_nn(ushort address) {
+		if(!registers.flagZero) {
+			stackPush(registers.pc);
+			registers.pc = address;
+		}
+	}
+
+	// RST n
+	void rst(ubyte address)() {
+		stackPush(registers.pc);
+		registers.pc = address;
+	}
+
+	// RET Z
+	void ret_z() {
+		if(registers.flagZero)
+			registers.pc = stackPop!ushort;
+	}
+
+	// RET
+	void ret() {
+		registers.pc = stackPop!ushort;
+	}
+
+	// JP Z, nn
+	void jp_z_nn(ushort address) {
+		if(registers.flagZero)
+			registers.pc = address;
+	}
+
+	// CB n
+	void cb_n(ubyte value) {
+		// TODO:
+	}
+
+	// CALL Z, nn
+	void call_z_nn(ushort address) {
+		if(registers.flagZero) {
+			stackPush(registers.pc);
+			registers.pc = address;
+		}
+	}
+
+	// CALL nn
+	void call_nn(ushort address) {
+		stackPush(registers.pc);
+		registers.pc = address;
+	}
+
+	// RET NC
+	void ret_nc() {
+		if(!registers.flagCarry)
+			registers.pc = stackPop!ushort;
+	}
+
+	// JP NC, nn
+	void jp_nc_nn(ushort address) {
+		if(!registers.flagCarry)
+			registers.pc = address;
+	}
+
+	// CALL NC, nn
+	void call_nc_nn(ushort address) {
+		if(!registers.flagCarry) {
+			stackPush(registers.pc);
+			registers.pc = address;
+		}
+	}
+
+	// RET C
+	void ret_c() {
+		if(registers.flagCarry)
+			registers.pc = stackPop!ushort;
+	}
+
+	// RETI
+	void reti() {
+		registers.pc = stackPop!ushort;
 	}
 
 	/*
@@ -574,6 +774,31 @@ class Cpu
 		registers.flagZero = registers.a == 0;
 	}
 
+	void xor_a(T)(T value) {
+		registers.a ^= value;
+		
+		registers.flagCarry = false;
+		registers.flagNegative = false;
+		registers.flagHalfCarry = false;
+		registers.flagZero = registers.a == 0;
+	}
+
+	void or_a(T)(T value) {
+		registers.a |= value;
+		
+		registers.flagCarry = false;
+		registers.flagNegative = false;
+		registers.flagHalfCarry = false;
+		registers.flagZero = registers.a == 0;
+	}
+
+	void cp_a(T)(T value) {
+		registers.flagZero = registers.a == value;
+		registers.flagCarry = value > registers.a;
+		registers.flagHalfCarry = (value & 0x0F) > (registers.a & 0x0F);
+		registers.flagNegative = true;
+	}
+
 	/*
 	 * End Instruction handlers
 	 */
@@ -617,8 +842,18 @@ class Cpu
 	}
 
 	ushort readShort() {
-		ushort value = memory[cast(ushort)(registers.pc + 1)] << 8 | cast(ushort)memory[registers.pc];
+		ushort value = (memory[cast(ushort)(registers.pc + 1)] << 8) | cast(ushort)memory[registers.pc];
 		registers.pc += 2;
+		return value;
+	}
+
+	ubyte readByte(ushort address) {
+		ubyte value = memory[address];
+		return value;
+	}
+	
+	ushort readShort(ushort address) {
+		ushort value = (memory[cast(ushort)(address + 1)] << 8) | cast(ushort)memory[address];
 		return value;
 	}
 
@@ -628,7 +863,7 @@ class Cpu
 	}
 	
 	ushort readShortNoMove() {
-		ushort value = memory[cast(ushort)(registers.pc + 1)] << 8 | cast(ushort)memory[registers.pc];
+		ushort value = (memory[cast(ushort)(registers.pc + 1)] << 8) | cast(ushort)memory[registers.pc];
 		return value;
 	}
 
@@ -641,6 +876,30 @@ class Cpu
 			writefln(format(instruction.disassembly, readByteNoMove));
 		else if(instruction.length == 2)
 			writefln(format(instruction.disassembly, readShortNoMove));
+	}
+
+	auto stackPop(T)() {
+		static if(is(T : ubyte)) {
+			auto value = readByte(registers.sp);
+			registers.sp++;
+			return value;
+		}
+		else {
+			auto value = readShort(registers.sp);
+			registers.sp += 2;
+			return value;
+		}
+	}
+
+	void stackPush(T)(T value) {
+		static if(is(T : ubyte)) {
+			registers.sp--;
+			memory[registers.sp] = value;
+		}
+		else {
+			registers.sp -= 2;
+			memory[registers.sp] = value;
+		}
 	}
 }
 
