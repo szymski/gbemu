@@ -1,7 +1,7 @@
 ﻿module gbemu.cpu;
 
 import std.experimental.logger, std.format, std.stdio, std.conv : to;
-import gbemu.emulator, gbemu.registers, gbemu.memory;
+import gbemu.emulator, gbemu.registers, gbemu.memory, gbemu.interrupts;
 
 enum fixedCycleCount = 20;
 
@@ -21,6 +21,7 @@ class Cpu
 {
 	Emulator emulator;
 	Memory memory;
+	Interrupts interrupts;
 	 
 	Registers registers;
 
@@ -30,14 +31,28 @@ class Cpu
 	{
 		this.emulator = emulator;
 		memory = emulator.memory;
-		 
+		interrupts = emulator.interrupts; 
+
 		reset();
 		registerInstructions();
+
 	}
 
 	void reset() { 
-		registers.pc = 0;
-		registers.sp = 0;
+		registers.a = 0x01;
+		registers.f = 0xb0;
+		registers.b = 0x00;
+		registers.c = 0x13;
+		registers.d = 0x00;
+		registers.e = 0xd8;
+		registers.h = 0x01;
+		registers.l = 0x4d;
+		registers.pc = 0x100;
+		registers.sp = 0xFFFE;
+
+		interrupts.master = 1;
+		interrupts.enable = 0;
+		interrupts.flags = 0;
 	}
 
 	void registerInstructions() {
@@ -277,6 +292,44 @@ class Cpu
 		registerInstruction!(0xD7, "RST 0x10", 0)(&rst!0x10);
 		registerInstruction!(0xD8, "RET C", 0)(&ret_c);
 		registerInstruction!(0xD9, "RETI", 0)(&reti);
+		registerInstruction!(0xDA, "JP C, 0x%X", 2)(&jp_c_nn);
+		registerInstruction!(0xDB, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xDC, "CALL C, 0x%X", 2)(&call_c_nn);
+		registerInstruction!(0xDD, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xDE, "SBC 0x%X", 1)(&sbc_a_n);
+		registerInstruction!(0xDF, "RST 0x18", 0)(&rst!0x18);
+		registerInstruction!(0xE0, "LD (0xFF00 + 0x%X), A", 1)(&ld_ffn_reg!"a");
+		registerInstruction!(0xE1, "POP HL", 0)(&pop_reg!"hl");
+		registerInstruction!(0xE2, "LD (0xFF00 + C), A", 0)(&ld_ffreg_reg!("c", "a"));
+		registerInstruction!(0xE3, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xE4, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xE5, "PUSH HL", 0)(&push_reg!"hl");
+		registerInstruction!(0xE6, "AND 0x%X", 1)(&and_a_n);
+		registerInstruction!(0xE7, "RST 0x20", 0)(&rst!0x20);
+		registerInstruction!(0xE8, "ADD SP, 0x%X", 1)(&add_reg_n!"sp");
+		registerInstruction!(0xE9, "JP HL", 0)(&jp_reg!"hl");
+		registerInstruction!(0xEA, "LD (0x%X), A", 2)(&ld_nnptr_reg!"a");
+		registerInstruction!(0xEB, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xEC, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xED, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xEE, "XOR 0x%X", 1)(&xor_a_n);
+		registerInstruction!(0xEF, "RST 0x28", 0)(&rst!0x28);
+		registerInstruction!(0xF0, "LD A, (0xFF00 + 0x%X)", 1)(&ld_reg_ffn!"a");
+		registerInstruction!(0xF1, "POP AF", 0)(&pop_reg!"af");
+		registerInstruction!(0xF2, "LD A, (0xFF00 + C)", 0)(&ld_reg_ffreg!("a", "c"));
+		registerInstruction!(0xF3, "DI", 0)(&di);
+		registerInstruction!(0xF4, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xF5, "PUSH AF", 0)(&push_reg!"af");
+		registerInstruction!(0xF6, "OR A, 0x%X", 1)(&or_a_n);
+		registerInstruction!(0xF7, "RST 0x30", 0)(&rst!0x30);
+		registerInstruction!(0xF8, "LD HL, SP + 0x%X", 1)(&ld_hl_spn);
+		registerInstruction!(0xF9, "LD SP, HL", 0)(&ld_reg_reg!("sp", "hl"));
+		registerInstruction!(0xFA, "LD A, (0x%X)", 2)(&ld_reg_nnptr!"a");
+		registerInstruction!(0xFB, "EI", 0)(&ei);
+		registerInstruction!(0xFC, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xFD, "UNKNOWN", 0)(&nop);
+		registerInstruction!(0xFE, "CP 0x%X", 1)(&cp_n);
+		registerInstruction!(0xFF, "RST 0x38", 0)(&rst!0x38);
 	}
 
 	void registerInstruction(ubyte opcode, string disassembly, ubyte length, T...)(void delegate(T) execute) {
@@ -300,6 +353,11 @@ class Cpu
 	// LD reg, nn
 	void ld_reg_nn(string register)(ushort value) {
 		mixin(`registers.` ~ register ~ ` = value;`);
+	}
+	
+	// LD reg, (nn)
+	void ld_reg_nnptr(string register)(ushort value) {
+		mixin(`registers.` ~ register ~ ` = memory[value];`);
 	}
 
 	// LD reg, n
@@ -434,6 +492,11 @@ class Cpu
 		mixin(`sbc_a(memory[registers.` ~ register ~ `]);`);
 	}
 
+	// SBC A, n
+	void sbc_a_n(ubyte value) {
+		sbc_a(value);
+	}
+
 	// AND A, reg
 	void and_a_reg(string register)() {
 		mixin(`and_a(registers.` ~ register ~ `);`);
@@ -442,6 +505,11 @@ class Cpu
 	// AND A, regptr
 	void and_a_regptr(string register)() {
 		mixin(`and_a(memory[registers.` ~ register ~ `]);`);
+	}
+	
+	// AND A, n
+	void and_a_n(ubyte value) {
+		and_a(value);
 	}
 
 	// XOR A, reg
@@ -453,6 +521,11 @@ class Cpu
 	void xor_a_regptr(string register)() {
 		mixin(`xor_a(memory[registers.` ~ register ~ `]);`);
 	}
+	
+	// XOR A, n
+	void xor_a_n(ubyte value) {
+		xor_a(value);
+	}
 
 	// OR A, reg
 	void or_a_reg(string register)() {
@@ -462,6 +535,11 @@ class Cpu
 	// OR A, regptr
 	void or_a_regptr(string register)() {
 		mixin(`or_a(memory[registers.` ~ register ~ `]);`);
+	}
+	
+	// OR A, n
+	void or_a_n(ubyte value) {
+		or_a(value);
 	}
 
 	// CP A, reg
@@ -579,7 +657,8 @@ class Cpu
 
 	// HALT
 	void halt() {
-		// TODO: Halt
+		if(interrupts.master)
+			registers.pc--;
 	}
 
 	// RET NZ
@@ -690,6 +769,75 @@ class Cpu
 		registers.pc = stackPop!ushort;
 	}
 
+	// JP C, nn
+	void jp_c_nn(ushort address) {
+		if(registers.flagCarry)
+			registers.pc = address;
+	}
+
+	// CALL C, nn
+	void call_c_nn(ushort address) {
+		if(registers.flagCarry) {
+			stackPush(registers.pc);
+			registers.pc = address;
+		}
+	}
+
+	// LD (0xFF00 + n), reg
+	void ld_ffn_reg(string reg)(ubyte offset) {
+		memory[0xFF00 + offset] = mixin("registers." ~ reg);
+	}
+
+	// LD (0xFF00 + reg), reg
+	void ld_ffreg_reg(string register1, string register2)() {
+		memory[0xFF00 + mixin("registers." ~ register1)] = mixin("registers." ~ register2);
+	} 
+
+	// JP reg
+	void jp_reg(string register)() {
+		registers.pc = mixin("registers." ~ register);
+	}
+
+	// LD reg, (0xFF00 + n)
+	void ld_reg_ffn(string register)(ubyte value) {
+		mixin(`registers.` ~ register ~ ` = memory[0xFF00 + value];`);
+	}
+	
+	// LD reg, (0xFF00 + reg)
+	void ld_reg_ffreg(string register1, string register2)() {
+		mixin(`registers.` ~ register1 ~ ` = memory[0xFF00 + registers.` ~ register2 ~ `];`);
+	}
+	
+	// DI
+	void di() {
+		interrupts.master = 0;
+	}
+	
+	// LD HL, SP + n
+	void ld_hl_spn(ubyte value) {
+		int result = registers.sp + cast(byte)value;
+		
+		registers.flagCarry = (result & 0xFFFFFFFF) > 0;
+		registers.flagHalfCarry = (registers.sp & 0x0F) + (value & 0x0F) > 0x0F;
+		registers.flagZero = false;
+		registers.flagNegative = false;
+		
+		registers.hl = result & 0xFFFF;
+	}
+	
+	// EI
+	void ei() {
+		interrupts.master = 1;	
+	}
+	
+	// CP n
+	void cp_n(ubyte value) {
+		registers.flagNegative = true;
+		registers.flagZero = registers.a == value;
+		registers.flagCarry = value > registers.a;
+		registers.flagHalfCarry = (value & 0x0F) > (registers.a & 0x0F);
+	}
+	
 	/*
 	 * Instruction handler helpers
 	 */
@@ -868,7 +1016,7 @@ class Cpu
 	}
 
 	void logInstruction(Instruction instruction) {
-		writef("0x%X: ", registers.pc);
+		writef("0x%X: ", registers.pc - 1);
 
 		if(instruction.length == 0)
 			writefln(format(instruction.disassembly));
@@ -898,8 +1046,9 @@ class Cpu
 		}
 		else {
 			registers.sp -= 2;
-			memory[registers.sp] = value;
+			memory[registers.sp] = cast(ubyte)(value & 0xFF);
+			memory[cast(ushort)(registers.sp + 1)] = cast(ubyte)((value >> 8) & 0xFF);
 		}
 	}
-}
 
+}

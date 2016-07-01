@@ -1,6 +1,7 @@
 ﻿module gbemu.memory;
 
 import std.conv;
+import gbemu.emulator;
 
 private const ubyte[] bootstrapRom = [
 	0x31, 0xc0, 0xd1, 0x3f, 0x21, 0xd1, 0x3f, 0x32, 0xec, 0x7c, 0x20, 
@@ -31,6 +32,8 @@ private const ubyte[] bootstrapRom = [
 
 class Memory
 {
+	Emulator emulator;
+
 	ubyte[0x8000] cartridge; // 0x0000 - 0x7FFF
 	ubyte[0x2000] vram; // 0x8000 - 0x9FFF
 	ubyte[0x2000] extram; // 0xA000 - 0xBFFF
@@ -38,6 +41,10 @@ class Memory
 	ubyte[0x100] oam; // 0xFE00 - 0xFE9F
 	ubyte[0x100] io; // 0xFF00 - 0xFF7F
 	ubyte[0x80] hram; // 0xFF80 - 0xFFFE
+
+	this(Emulator emulator) {
+		this.emulator = emulator;
+	}
 
 	ubyte opIndex(ushort address) {
 		return getReference(address);
@@ -77,11 +84,14 @@ class Memory
 		if(address >= 0xFE00 && address <= 0xFE9F)
 			return oam[address - 0xFE00];
 
-		if(address >= 0xFF7F && address <= 0xFF00)
-			return io[address - 0xFF7F];
+		if(address == 0xff0f)
+			return emulator.interrupts.flags;
 
-		if(address >= 0xFF80 && address <= 0xFFFE)
-			return io[address - 0xFF80];
+		if(address >= 0xFF00 && address <= 0xFFFE)
+			return io[address - 0xFF00];
+
+		if(address == 0xffff)
+			return emulator.interrupts.enable;
 
 		throw new Exception("Invalid memory reference " ~ address.to!string(16));
 	}
