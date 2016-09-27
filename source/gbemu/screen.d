@@ -71,7 +71,7 @@ class ScreenRenderer {
 		// TODO: Debug, remove
 		import std.file;
 		auto rom = cast(ubyte[])read("rom.bin");
-		//screen.memory.vram = rom[0x8000 .. 0xA000];
+		screen.memory.vram = rom[0x8000 .. 0xA000];
 	}
 
 	void render() {

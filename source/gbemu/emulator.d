@@ -1,6 +1,6 @@
 ﻿module gbemu.emulator;
 
-import std.stdio, std.datetime, std.file, std.string, core.thread, std.experimental.logger, derelict.sdl2.sdl, derelict.opengl3.gl;
+import std.stdio, std.datetime, std.file, std.string, core.thread, std.experimental.logger, derelict.sdl2.sdl, derelict.opengl3.gl, derelict.freetype.ft;
 import gbemu.cpu, gbemu.memory, gbemu.screen, gbemu.interrupts;
 
 class Emulator

@@ -38,7 +38,9 @@ class Memory
 	ubyte[0x2000] vram; // 0x8000 - 0x9FFF
 	ubyte[0x2000] extram; // 0xA000 - 0xBFFF
 	ubyte[0x2000] wram; // 0xC000 - 0xDFFF
+	// Mirror of wram 0xE000 - 0xFDFF
 	ubyte[0x100] oam; // 0xFE00 - 0xFE9F
+	// Not usable 0xFEA0 - 0xFEFF
 	ubyte[0x100] io; // 0xFF00 - 0xFF7F
 	ubyte[0x80] hram; // 0xFF80 - 0xFFFE
 
@@ -81,16 +83,19 @@ class Memory
 		if(address >= 0xC000 && address <= 0xDFFF)
 			return wram[address - 0xC000];
 
-		if(address >= 0xFE00 && address <= 0xFE9F)
+		if(address >= 0xE000 && address <= 0xFDFF)
+			return wram[address - 0xE000];
+
+		if(address >= 0xFE00 && address <= 0xFEFF)
 			return oam[address - 0xFE00];
 
-		if(address == 0xff0f)
-			return emulator.interrupts.flags;
-
-		if(address >= 0xFF00 && address <= 0xFFFE)
+		if(address >= 0xFF00 && address <= 0xFF7F)
 			return io[address - 0xFF00];
 
-		if(address == 0xffff)
+		if(address >= 0xFF80 && address <= 0xFFFE)
+			return hram[address - 0xFF80];
+
+		if(address == 0xFFFF)
 			return emulator.interrupts.enable;
 
 		throw new Exception("Invalid memory reference " ~ address.to!string(16));
@@ -108,7 +113,7 @@ unittest {
 	Memory memory;
 
 	foreach(i; 0 .. 0x7FFF) {
-		//ubyte value = cast(ubyte)uniform(0, 255);
+		ubyte value = cast(ubyte)uniform(0, 255);
 		//memory[cast(ushort)i] = value;
 		//assert(memory[cast(ushort)i] == value);
 	}

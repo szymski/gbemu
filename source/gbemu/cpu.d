@@ -3,7 +3,8 @@
 import std.experimental.logger, std.format, std.stdio, std.conv : to;
 import gbemu.emulator, gbemu.registers, gbemu.memory, gbemu.interrupts;
 
-enum fixedCycleCount = 20;
+enum fixedCycleCount = 200;
+bool logging = false;
 
 class Instruction {
 	string disassembly;
@@ -26,6 +27,7 @@ class Cpu
 	Registers registers;
 
 	Instruction[256] instructions;
+	Instruction[256] extendedInstructions;
 
 	this(Emulator emulator)
 	{
@@ -35,7 +37,7 @@ class Cpu
 
 		reset();
 		registerInstructions();
-
+		registerExtendedInstructions();
 	}
 
 	void reset() { 
@@ -343,10 +345,61 @@ class Cpu
 		instructions[opcode] = new Instruction(disassembly, length, cast(void delegate())execute);
 	}
 
+	void registerExtendedInstructions() {
+		registerExtendedInstruction!(0x00, "RLC B", 0)(&rlc_reg!"b");
+		registerExtendedInstruction!(0x01, "RLC C", 0)(&rlc_reg!"c");
+		registerExtendedInstruction!(0x02, "RLC D", 0)(&rlc_reg!"d");
+		registerExtendedInstruction!(0x03, "RLC E", 0)(&rlc_reg!"e");
+		registerExtendedInstruction!(0x04, "RLC H", 0)(&rlc_reg!"h");
+		registerExtendedInstruction!(0x05, "RLC L", 0)(&rlc_reg!"l");
+		registerExtendedInstruction!(0x06, "RLC (HL)", 0)(&rlc_regptr!"hl");
+		registerExtendedInstruction!(0x07, "RLC A", 0)(&rlc_reg!"a");
+
+		registerExtendedInstruction!(0x08, "RRC B", 0)(&rrc_reg!"b");
+		registerExtendedInstruction!(0x09, "RRC C", 0)(&rrc_reg!"c");
+		registerExtendedInstruction!(0x0A, "RRC D", 0)(&rrc_reg!"d");
+		registerExtendedInstruction!(0x0B, "RRC E", 0)(&rrc_reg!"e");
+		registerExtendedInstruction!(0x0C, "RRC H", 0)(&rrc_reg!"h");
+		registerExtendedInstruction!(0x0D, "RRC L", 0)(&rrc_reg!"l");
+		registerExtendedInstruction!(0x0E, "RRC (HL)", 0)(&rrc_regptr!"hl");
+		registerExtendedInstruction!(0x0F, "RRC A", 0)(&rrc_reg!"a");
+
+		registerExtendedInstruction!(0x10, "RL B", 0)(&rl_reg!"b");
+		registerExtendedInstruction!(0x11, "RL C", 0)(&rl_reg!"c");
+		registerExtendedInstruction!(0x12, "RL D", 0)(&rl_reg!"d");
+		registerExtendedInstruction!(0x13, "RL E", 0)(&rl_reg!"e");
+		registerExtendedInstruction!(0x14, "RL H", 0)(&rl_reg!"h");
+		registerExtendedInstruction!(0x15, "RL L", 0)(&rl_reg!"l");
+		registerExtendedInstruction!(0x16, "RL (HL)", 0)(&rl_regptr!"hl");
+		registerExtendedInstruction!(0x17, "RL A", 0)(&rl_reg!"a");
+
+		registerExtendedInstruction!(0x18, "RR B", 0)(&rr_reg!"b");
+		registerExtendedInstruction!(0x19, "RR C", 0)(&rr_reg!"c");
+		registerExtendedInstruction!(0x1A, "RR D", 0)(&rr_reg!"d");
+		registerExtendedInstruction!(0x1B, "RR E", 0)(&rr_reg!"e");
+		registerExtendedInstruction!(0x1C, "RR H", 0)(&rr_reg!"h");
+		registerExtendedInstruction!(0x1D, "RR L", 0)(&rr_reg!"l");
+		registerExtendedInstruction!(0x1E, "RR (HL)", 0)(&rr_regptr!"hl");
+		registerExtendedInstruction!(0x1F, "RR A", 0)(&rr_reg!"a");
+
+	}
+
+	void registerExtendedInstruction(ubyte opcode, string disassembly, ubyte length, T...)(void delegate(T) execute) {
+		static if(length == 1)
+			static assert(is(typeof(execute) : void delegate(ubyte)), "Invalid delegate type. For operand size 1, it must be void delegate(ubyte).");
+		static if(length == 2)
+			static assert(is(typeof(execute) : void delegate(ushort)), "Invalid delegate type. For operand size 2, it must be void delegate(ushort).");
+		
+		assert(extendedInstructions[opcode] is null, "Instruction already registered.");
+		
+		extendedInstructions[opcode] = new Instruction(disassembly, length, cast(void delegate())execute);
+	}
+
 	/*
 	 * Instruction handlers
 	 */
 
+	// NOP
 	void nop() {
 	}
 
@@ -367,13 +420,11 @@ class Cpu
 
 	// LD (reg), nn
 	void ld_regptr_nn(string register)(ushort value) {
-		// TODO:
 		mixin(`memory[registers.` ~ register ~ `] = value;`);
 	}
 
 	// LD (reg), n
 	void ld_regptr_n(string register)(ubyte value) {
-		// TODO:
 		mixin(`memory[registers.` ~ register ~ `] = value;`);
 	}
 
@@ -432,7 +483,7 @@ class Cpu
 		mixin(`registers.` ~ register1 ~ ` = add(registers.` ~ register1 ~ `, registers.` ~ register2 ~ `);`);
 	}
 
-	// ADD reg, regptr
+	// ADD reg, (reg)
 	void add_reg_regptr(string register1, string register2)() {
 		mixin(`registers.` ~ register1 ~ ` = add(registers.` ~ register1 ~ `, cast(ubyte)memory[registers.` ~ register2 ~ `]);`);
 	}
@@ -442,12 +493,12 @@ class Cpu
 		mixin(`registers.` ~ register1 ~ ` = add(registers.` ~ register1 ~ `, value);`);
 	}
 
-	// INC regptr
+	// INC (reg)
 	void inc_regptr(string register)() {
 		mixin(`memory[registers.` ~ register ~ `] = cast(ubyte)(inc(memory[registers.` ~ register ~ `]));`);
 	}
 
-	// DEC regptr
+	// DEC (reg)
 	void dec_regptr(string register)() {
 		mixin(`memory[registers.` ~ register ~ `] = cast(ubyte)(dec(memory[registers.` ~ register ~ `]));`);
 	}
@@ -457,7 +508,7 @@ class Cpu
 		mixin(`adc_a(registers.` ~ register ~ `);`);
 	}
 
-	// ADC A, regptr
+	// ADC A, (reg)
 	void adc_a_regptr(string register)() {
 		mixin(`adc_a(memory[registers.` ~ register ~ `]);`);
 	}
@@ -472,7 +523,7 @@ class Cpu
 		mixin(`sub_a(registers.` ~ register ~ `);`);
 	}
 
-	// SUB A, regptr
+	// SUB A, (reg)
 	void sub_a_regptr(string register)() {
 		mixin(`sub_a(memory[registers.` ~ register ~ `]);`);
 	}
@@ -487,7 +538,7 @@ class Cpu
 		mixin(`sbc_a(registers.` ~ register ~ `);`);
 	}
 	
-	// SBC A, regptr
+	// SBC A, (reg)
 	void sbc_a_regptr(string register)() {
 		mixin(`sbc_a(memory[registers.` ~ register ~ `]);`);
 	}
@@ -502,7 +553,7 @@ class Cpu
 		mixin(`and_a(registers.` ~ register ~ `);`);
 	}
 
-	// AND A, regptr
+	// AND A, (reg)
 	void and_a_regptr(string register)() {
 		mixin(`and_a(memory[registers.` ~ register ~ `]);`);
 	}
@@ -517,7 +568,7 @@ class Cpu
 		mixin(`xor_a(registers.` ~ register ~ `);`);
 	}
 	
-	// XOR A, regptr
+	// XOR A, (reg)
 	void xor_a_regptr(string register)() {
 		mixin(`xor_a(memory[registers.` ~ register ~ `]);`);
 	}
@@ -532,7 +583,7 @@ class Cpu
 		mixin(`or_a(registers.` ~ register ~ `);`);
 	}
 	
-	// OR A, regptr
+	// OR A, (reg)
 	void or_a_regptr(string register)() {
 		mixin(`or_a(memory[registers.` ~ register ~ `]);`);
 	}
@@ -547,7 +598,7 @@ class Cpu
 		mixin(`cp_a(registers.` ~ register ~ `);`);
 	}
 	
-	// CP A, regptr
+	// CP A, (reg)
 	void cp_a_regptr(string register)() {
 		mixin(`cp_a(memory[registers.` ~ register ~ `]);`);
 	}
@@ -567,11 +618,13 @@ class Cpu
 	// STOP
 	void stop(ubyte value) {
 		// TODO
+		writeln("STOP - Not implemented");
 	}
 
 	// RLA
 	void rla() {
 		// TODO
+		writeln("RLA - Not implemented");
 	}
 
 	// JR n
@@ -582,6 +635,7 @@ class Cpu
 	// RRA
 	void rra() {
 		// TODO
+		writeln("RRA - Not implemented");
 	}
 
 	// JR NZ, n
@@ -721,7 +775,17 @@ class Cpu
 
 	// CB n
 	void cb_n(ubyte value) {
-		// TODO:
+		writeln("CB");
+
+		//log("Executing: 0x", opcode.to!string(16));
+		
+		if(auto instruction = extendedInstructions[value]) {
+			if(logging)
+				logInstruction(instruction);
+			executeExtendedInstruction(instruction);
+		}
+		else
+			log("Unknown extended instruction: 0x", value.to!string(16));
 	}
 
 	// CALL Z, nn
@@ -766,6 +830,7 @@ class Cpu
 
 	// RETI
 	void reti() {
+		interrupts.master = 1;
 		registers.pc = stackPop!ushort;
 	}
 
@@ -837,7 +902,51 @@ class Cpu
 		registers.flagCarry = value > registers.a;
 		registers.flagHalfCarry = (value & 0x0F) > (registers.a & 0x0F);
 	}
+
+	/*
+	 * Extended instructions
+	 */
+
+	// RLC reg
+	void rlc_reg(string register)() {
+		mixin("registers." ~ register) = rlc(mixin("registers." ~ register));
+	}
+
+	// RLC regptr
+	void rlc_regptr(string register)() {
+		memory[mixin("registers." ~ register)] = rlc(memory[mixin("registers." ~ register)]);
+	}
+
+	// RRC reg
+	void rrc_reg(string register)() {
+		mixin("registers." ~ register) = rrc(mixin("registers." ~ register));
+	}
+
+	// RRC regptr
+	void rrc_regptr(string register)() {
+		memory[mixin("registers." ~ register)] = rrc(memory[mixin("registers." ~ register)]);
+	}
+
+	// RL reg
+	void rl_reg(string register)() {
+		mixin("registers." ~ register) = rl(mixin("registers." ~ register));
+	}
+
+	// RL regptr
+	void rl_regptr(string register)() {
+		memory[mixin("registers." ~ register)] = rl(memory[mixin("registers." ~ register)]);
+	}
+
+	// RR reg
+	void rr_reg(string register)() {
+		mixin("registers." ~ register) = rr(mixin("registers." ~ register));
+	}
 	
+	// RR regptr
+	void rr_regptr(string register)() {
+		memory[mixin("registers." ~ register)] = rr(memory[mixin("registers." ~ register)]);
+	}
+
 	/*
 	 * Instruction handler helpers
 	 */
@@ -947,6 +1056,70 @@ class Cpu
 		registers.flagNegative = true;
 	}
 
+	ubyte rlc(ubyte value) {
+		int carry = (value & 0x80) >> 7;
+		
+		registers.flagCarry = (value & 0x80) > 0;
+		
+		value <<= 1;
+		value += carry;
+		
+		registers.flagZero = value == 0;
+		registers.flagHalfCarry = false;
+		
+		return value;
+	}
+
+	ubyte rrc(ubyte value) {
+		int carry = value & 0x01;
+		
+		value >>= 1;
+
+		registers.flagCarry = carry > 0;
+
+		if(carry)
+			value |= 0x80;
+
+		registers.flagZero = value == 0;
+
+		registers.flagNegative = false;
+		registers.flagHalfCarry = false;
+
+		return value;
+	}
+
+	ubyte rl(ubyte value) {
+		int carry = registers.flagCarry ? 1 : 0;
+
+		registers.flagCarry = (value & 0x80) > 0;
+
+		value <<= 1;
+		value += carry;
+
+		registers.flagZero = value == 0;
+
+		registers.flagNegative = false;
+		registers.flagHalfCarry = false;
+		
+		return value;
+	}
+
+	ubyte rr(ubyte value) {
+		value >>= 1;
+
+		if(registers.flagCarry)
+			value |= 0x80;
+
+		registers.flagCarry = (value & 0x01) > 0;
+
+		registers.flagZero = value > 0;
+
+		registers.flagNegative = false;
+		registers.flagHalfCarry = false;
+
+		return value;
+	}
+
 	/*
 	 * End Instruction handlers
 	 */
@@ -963,7 +1136,8 @@ class Cpu
 		//log("Executing: 0x", opcode.to!string(16));
 
 		if(auto instruction = instructions[opcode]) {
-			logInstruction(instruction);
+			if(logging)
+				logInstruction(instruction);
 			executeInstruction(instruction);
 		}
 		else
@@ -971,6 +1145,27 @@ class Cpu
 	}
 
 	void executeInstruction(Instruction instruction) {
+		// TODO: Debug - Remove later
+		//if(registers.pc == 0x2B5)
+		//	logging = true;
+
+		//writeln("bc: ", registers.bc.to!string(16));
+		//writeln("af: ", registers.af.to!string(16));
+		//writeln("pc: ", registers.pc.to!string(16));
+
+		if(instruction.length == 0)
+			instruction.execute();
+		else if(instruction.length == 1) {
+			auto value = readByte();
+			(cast(void delegate(ubyte))(instruction.execute))(value);
+		}
+		else if(instruction.length == 2) {
+			auto value = readShort();
+			(cast(void delegate(ushort))(instruction.execute))(value);
+		}
+	}
+
+	void executeExtendedInstruction(Instruction instruction) {
 		if(instruction.length == 0)
 			instruction.execute();
 		else if(instruction.length == 1) {
