@@ -3,7 +3,7 @@
 import std.experimental.logger, std.format, std.stdio, std.conv : to;
 import gbemu.emulator, gbemu.registers, gbemu.memory, gbemu.interrupts;
 
-enum fixedCycleCount = 200;
+enum fixedCycleCount = 2000;
 bool logging = false;
 
 class Instruction {
@@ -346,41 +346,59 @@ class Cpu
 	}
 
 	void registerExtendedInstructions() {
-		registerExtendedInstruction!(0x00, "RLC B", 0)(&rlc_reg!"b");
-		registerExtendedInstruction!(0x01, "RLC C", 0)(&rlc_reg!"c");
-		registerExtendedInstruction!(0x02, "RLC D", 0)(&rlc_reg!"d");
-		registerExtendedInstruction!(0x03, "RLC E", 0)(&rlc_reg!"e");
-		registerExtendedInstruction!(0x04, "RLC H", 0)(&rlc_reg!"h");
-		registerExtendedInstruction!(0x05, "RLC L", 0)(&rlc_reg!"l");
-		registerExtendedInstruction!(0x06, "RLC (HL)", 0)(&rlc_regptr!"hl");
-		registerExtendedInstruction!(0x07, "RLC A", 0)(&rlc_reg!"a");
+		registerExtendedInstructionSet!(0x00, "RLC", rlc);
+//		registerExtendedInstruction!(0x00, "RLC B", 0)(&rlc_reg!"b");
+//		registerExtendedInstruction!(0x01, "RLC C", 0)(&rlc_reg!"c");
+//		registerExtendedInstruction!(0x02, "RLC D", 0)(&rlc_reg!"d");
+//		registerExtendedInstruction!(0x03, "RLC E", 0)(&rlc_reg!"e");
+//		registerExtendedInstruction!(0x04, "RLC H", 0)(&rlc_reg!"h");
+//		registerExtendedInstruction!(0x05, "RLC L", 0)(&rlc_reg!"l");
+//		registerExtendedInstruction!(0x06, "RLC (HL)", 0)(&rlc_regptr!"hl");
+//		registerExtendedInstruction!(0x07, "RLC A", 0)(&rlc_reg!"a");
 
-		registerExtendedInstruction!(0x08, "RRC B", 0)(&rrc_reg!"b");
-		registerExtendedInstruction!(0x09, "RRC C", 0)(&rrc_reg!"c");
-		registerExtendedInstruction!(0x0A, "RRC D", 0)(&rrc_reg!"d");
-		registerExtendedInstruction!(0x0B, "RRC E", 0)(&rrc_reg!"e");
-		registerExtendedInstruction!(0x0C, "RRC H", 0)(&rrc_reg!"h");
-		registerExtendedInstruction!(0x0D, "RRC L", 0)(&rrc_reg!"l");
-		registerExtendedInstruction!(0x0E, "RRC (HL)", 0)(&rrc_regptr!"hl");
-		registerExtendedInstruction!(0x0F, "RRC A", 0)(&rrc_reg!"a");
+		registerExtendedInstructionSet!(0x08, "RRC", rrc);
+//		registerExtendedInstruction!(0x08, "RRC B", 0)(&rrc_reg!"b");
+//		registerExtendedInstruction!(0x09, "RRC C", 0)(&rrc_reg!"c");
+//		registerExtendedInstruction!(0x0A, "RRC D", 0)(&rrc_reg!"d");
+//		registerExtendedInstruction!(0x0B, "RRC E", 0)(&rrc_reg!"e");
+//		registerExtendedInstruction!(0x0C, "RRC H", 0)(&rrc_reg!"h");
+//		registerExtendedInstruction!(0x0D, "RRC L", 0)(&rrc_reg!"l");
+//		registerExtendedInstruction!(0x0E, "RRC (HL)", 0)(&rrc_regptr!"hl");
+//		registerExtendedInstruction!(0x0F, "RRC A", 0)(&rrc_reg!"a");
 
-		registerExtendedInstruction!(0x10, "RL B", 0)(&rl_reg!"b");
-		registerExtendedInstruction!(0x11, "RL C", 0)(&rl_reg!"c");
-		registerExtendedInstruction!(0x12, "RL D", 0)(&rl_reg!"d");
-		registerExtendedInstruction!(0x13, "RL E", 0)(&rl_reg!"e");
-		registerExtendedInstruction!(0x14, "RL H", 0)(&rl_reg!"h");
-		registerExtendedInstruction!(0x15, "RL L", 0)(&rl_reg!"l");
-		registerExtendedInstruction!(0x16, "RL (HL)", 0)(&rl_regptr!"hl");
-		registerExtendedInstruction!(0x17, "RL A", 0)(&rl_reg!"a");
+		registerExtendedInstructionSet!(0x10, "RL", rl);
+//		registerExtendedInstruction!(0x10, "RL B", 0)(&rl_reg!"b");
+//		registerExtendedInstruction!(0x11, "RL C", 0)(&rl_reg!"c");
+//		registerExtendedInstruction!(0x12, "RL D", 0)(&rl_reg!"d");
+//		registerExtendedInstruction!(0x13, "RL E", 0)(&rl_reg!"e");
+//		registerExtendedInstruction!(0x14, "RL H", 0)(&rl_reg!"h");
+//		registerExtendedInstruction!(0x15, "RL L", 0)(&rl_reg!"l");
+//		registerExtendedInstruction!(0x16, "RL (HL)", 0)(&rl_regptr!"hl");
+//		registerExtendedInstruction!(0x17, "RL A", 0)(&rl_reg!"a");
 
-		registerExtendedInstruction!(0x18, "RR B", 0)(&rr_reg!"b");
-		registerExtendedInstruction!(0x19, "RR C", 0)(&rr_reg!"c");
-		registerExtendedInstruction!(0x1A, "RR D", 0)(&rr_reg!"d");
-		registerExtendedInstruction!(0x1B, "RR E", 0)(&rr_reg!"e");
-		registerExtendedInstruction!(0x1C, "RR H", 0)(&rr_reg!"h");
-		registerExtendedInstruction!(0x1D, "RR L", 0)(&rr_reg!"l");
-		registerExtendedInstruction!(0x1E, "RR (HL)", 0)(&rr_regptr!"hl");
-		registerExtendedInstruction!(0x1F, "RR A", 0)(&rr_reg!"a");
+		registerExtendedInstructionSet!(0x18, "RR", rr);
+//		registerExtendedInstruction!(0x18, "RR B", 0)(&rr_reg!"b");
+//		registerExtendedInstruction!(0x19, "RR C", 0)(&rr_reg!"c");
+//		registerExtendedInstruction!(0x1A, "RR D", 0)(&rr_reg!"d");
+//		registerExtendedInstruction!(0x1B, "RR E", 0)(&rr_reg!"e");
+//		registerExtendedInstruction!(0x1C, "RR H", 0)(&rr_reg!"h");
+//		registerExtendedInstruction!(0x1D, "RR L", 0)(&rr_reg!"l");
+//		registerExtendedInstruction!(0x1E, "RR (HL)", 0)(&rr_regptr!"hl");
+//		registerExtendedInstruction!(0x1F, "RR A", 0)(&rr_reg!"a");
+
+		registerExtendedInstructionSet!(0x20, "SLA", sla);
+//		registerExtendedInstruction!(0x20, "SLA B", 0)(&rr_reg!"a");
+//		registerExtendedInstruction!(0x21, "SLA C", 0)(&rr_reg!"a");
+//		registerExtendedInstruction!(0x22, "SLA D", 0)(&rr_reg!"a");
+//		registerExtendedInstruction!(0x23, "SLA E", 0)(&rr_reg!"a");
+//		registerExtendedInstruction!(0x24, "SLA H", 0)(&rr_reg!"a");
+//		registerExtendedInstruction!(0x25, "SLA L", 0)(&rr_reg!"a");
+//		registerExtendedInstruction!(0x26, "SLA (HL)", 0)(&rr_reg!"a");
+//		registerExtendedInstruction!(0x27, "SLA A", 0)(&rr_reg!"a");
+
+		registerExtendedInstructionSet!(0x28, "SRA", sra);
+
+		registerExtendedInstructionSet!(0x30, "SWAP", swap);
 
 	}
 
@@ -393,6 +411,42 @@ class Cpu
 		assert(extendedInstructions[opcode] is null, "Instruction already registered.");
 		
 		extendedInstructions[opcode] = new Instruction(disassembly, length, cast(void delegate())execute);
+	}
+
+	/*
+	 * Instruction handler templates
+	 */
+
+	void setRegister(string register, alias fun)() {
+		mixin(`registers.` ~ register ~ ` = fun(registers.` ~ register ~ `);`);
+	}
+
+	void setRegisterPtr(string register, alias fun)() {
+		mixin(`memory[registers.` ~ register ~ `] = fun(memory[registers.` ~ register ~ `]);`);
+	}
+
+	/// Registers handlers for registers: B, C, D, E, H, L, (HL), A.
+	void registerInstructionSet(int firstOpcode, string operation, alias fun)() {
+		registerInstruction!(firstOpcode + 0, operation ~ " B", 0)(&setRegister!("b", fun));
+		registerInstruction!(firstOpcode + 1, operation ~ " C", 0)(&setRegister!("c", fun));
+		registerInstruction!(firstOpcode + 2, operation ~ " D", 0)(&setRegister!("d", fun));
+		registerInstruction!(firstOpcode + 3, operation ~ " E", 0)(&setRegister!("e", fun));
+		registerInstruction!(firstOpcode + 4, operation ~ " H", 0)(&setRegister!("h", fun));
+		registerInstruction!(firstOpcode + 5, operation ~ " L", 0)(&setRegister!("l", fun));
+		registerInstruction!(firstOpcode + 6, operation ~ " (HL)", 0)(&setRegisterPtr!("hl", fun));
+		registerInstruction!(firstOpcode + 7, operation ~ " A", 0)(&setRegister!("a", fun));
+	}
+
+	/// Registers extended handlers for registers: B, C, D, E, H, L, (HL), A.
+	void registerExtendedInstructionSet(int firstOpcode, string operation, alias fun)() {
+		registerExtendedInstruction!(firstOpcode + 0, operation ~ " B", 0)(&setRegister!("b", fun));
+		registerExtendedInstruction!(firstOpcode + 1, operation ~ " C", 0)(&setRegister!("c", fun));
+		registerExtendedInstruction!(firstOpcode + 2, operation ~ " D", 0)(&setRegister!("d", fun));
+		registerExtendedInstruction!(firstOpcode + 3, operation ~ " E", 0)(&setRegister!("e", fun));
+		registerExtendedInstruction!(firstOpcode + 4, operation ~ " H", 0)(&setRegister!("h", fun));
+		registerExtendedInstruction!(firstOpcode + 5, operation ~ " L", 0)(&setRegister!("l", fun));
+		registerExtendedInstruction!(firstOpcode + 6, operation ~ " (HL)", 0)(&setRegisterPtr!("hl", fun));
+		registerExtendedInstruction!(firstOpcode + 7, operation ~ " A", 0)(&setRegister!("a", fun));
 	}
 
 	/*
@@ -1117,6 +1171,44 @@ class Cpu
 		registers.flagNegative = false;
 		registers.flagHalfCarry = false;
 
+		return value;
+	}
+
+	ubyte sla(ubyte value) {
+		registers.flagCarry = (value & 0x80) != 0;
+		
+		value <<= 1;
+		
+		registers.flagZero = value == 0;
+		
+		registers.flagNegative = 0;
+		registers.flagHalfCarry = 0;
+		
+		return value;
+	}
+
+	ubyte sra(ubyte value) {
+		registers.flagCarry = value & 0x01;
+		
+		value = (value & 0x80) | (value >> 1);
+		
+		registers.flagZero = value == 0;
+		
+		registers.flagNegative = 0;
+		registers.flagHalfCarry = 0;
+		
+		return value;
+	}
+
+	ubyte swap(ubyte value) {
+		value = ((value & 0xf) << 4) | ((value & 0xf0) >> 4);
+		
+		registers.flagZero = value == 0;
+		
+		registers.flagNegative = 0;
+		registers.flagCarry = 0;
+		registers.flagHalfCarry = 0;
+		
 		return value;
 	}
 
