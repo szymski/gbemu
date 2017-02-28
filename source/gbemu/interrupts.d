@@ -12,7 +12,6 @@ enum InterruptFlags {
 }
 
 class Interrupts {
-
 	Emulator emulator;
 
 	auto cpu() { return emulator.cpu; }
@@ -22,24 +21,19 @@ class Interrupts {
 	ubyte flags;
 
 	enum delayVblank = 16750418;
-	enum delayYCoord = 16750418 / 160;
+	enum delayLcdc = 167504 / 160;
 
 	StopWatch stopwatchVblank;
-	StopWatch stopwatchYCoord;
+	StopWatch stopwatchLcdcCoord;
 
 	this(Emulator emulator) {
 		this.emulator = emulator;
 
 		stopwatchVblank.start();
-		stopwatchYCoord.start();
+		stopwatchLcdcCoord.start();
 	}
 
 	void update() {
-		if(stopwatchYCoord.peek.nsecs > delayYCoord) {
-			stopwatchYCoord.reset();
-			yCoord();
-		}
-
 		if(master == 0 || enable == 0)
 			return;
 
@@ -47,29 +41,39 @@ class Interrupts {
 			stopwatchVblank.reset();
 			vblank();
 		}
+
+		if(stopwatchLcdcCoord.peek.nsecs > delayLcdc) {
+			stopwatchLcdcCoord.reset();
+			//lcdcStat();
+		}
 	}
 
 	void vblank() {
 		log("vblank");
 
+		enable = 1;
 		flags = InterruptFlags.vblank;
 		master = 0;
 		cpu.stackPush!ushort(cpu.registers.pc);
 		cpu.registers.pc = 0x40;
+		//emulator.cpu.stopped = true;
 	}
 
-	void lcdStat() {
+	void lcdcStat() {
+		log("lcdc stat");
+
+		enable = 1;
 		flags = InterruptFlags.lcdStat;
 		master = 0;
 		cpu.stackPush!ushort(cpu.registers.pc);
-		cpu.registers.pc = 0x50;
+		cpu.registers.pc = 0x48;
 	}
 
 	// TODO: Move this somewhere else
 	void yCoord() {
 		//log("yCoord: ", emulator.memory[0xFF44]);
-		emulator.memory[0xFF44] = cast(ubyte)(emulator.memory[0xFF44] + 1);
-		if(emulator.memory[0xFF44] >= 160)
-			emulator.memory[0xFF44] = 0;
+		//emulator.memory[0xFF44] = cast(ubyte)(emulator.memory[0xFF44] + 1);
+		//if(emulator.memory[0xFF44] >= 160)
+		//	emulator.memory[0xFF44] = 0;
 	}
 }

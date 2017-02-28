@@ -1,7 +1,7 @@
 ﻿module gbemu.emulator;
 
 import std.stdio, std.datetime, std.file, std.string, core.thread, std.experimental.logger, derelict.sdl2.sdl, derelict.opengl3.gl;
-import gbemu.cpu, gbemu.memory, gbemu.screen, gbemu.interrupts;
+import gbemu.cpu, gbemu.memory, gbemu.gpu, gbemu.screen, gbemu.interrupts;
 
 class Emulator
 {
@@ -12,7 +12,7 @@ class Emulator
 
 	Cpu cpu;
 	Memory memory;
-	Screen screen;
+	Gpu gpu;
 	ScreenRenderer screenRenderer;
 	Interrupts interrupts;
 
@@ -21,8 +21,8 @@ class Emulator
 		prepareLogger();
 		interrupts = new Interrupts(this);
 		memory = new Memory(this);
-		screen = new Screen(memory);
-		screenRenderer = new ScreenRenderer(screen);
+		gpu = new Gpu(this);
+		screenRenderer = new ScreenRenderer(gpu);
 		cpu = new Cpu(this);
 	}
 
@@ -68,6 +68,7 @@ class Emulator
 			updateEvents();
 			cpu.doFixedCycleCount();
 			interrupts.update();
+			gpu.update();
 			render();
 			limitFps();
 		}

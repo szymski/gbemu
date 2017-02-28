@@ -1,12 +1,15 @@
 ﻿<Properties StartupItem="dub.json">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Default" PreferredExecutionTarget="debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="source\gbemu\cpu.d">
+  <MonoDevelop.Ide.Workbench ActiveDocument="source\gbemu\interrupts.d">
     <Files>
-      <File FileName="source\app.d" Line="10" Column="1" />
-      <File FileName="source\gbemu\emulator.d" Line="88" Column="20" />
-      <File FileName="source\gbemu\cpu.d" Line="124" Column="3" />
-      <File FileName="source\gbemu\memory.d" Line="25" Column="42" />
-      <File FileName="dub.json" Line="1" Column="2" />
+      <File FileName="source\gbemu\cpu.d" Line="566" Column="1" />
+      <File FileName="source\gbemu\registers.d" Line="5" Column="20" />
+      <File FileName="source\gbemu\interrupts.d" Line="25" Column="2" />
+      <File FileName="source\gbemu\memory.d" Line="96" Column="24" />
+      <File FileName="source\gbemu\gpu.d" Line="17" Column="3" />
+      <File FileName="source\gbemu\emulator.d" Line="25" Column="42" NotebookId="1" />
+      <File FileName="source\app.d" Line="3" Column="1" NotebookId="1" />
+      <File FileName="source\gbemu\screen.d" Line="45" Column="34" NotebookId="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

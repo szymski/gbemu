@@ -89,8 +89,14 @@ class Memory
 		if(address >= 0xFE00 && address <= 0xFEFF)
 			return oam[address - 0xFE00];
 
-		if(address >= 0xFF00 && address <= 0xFF7F)
+		if(address >= 0xFF00 && address <= 0xFF7F) {
+			if(address == 0xFF0F)
+				return emulator.interrupts.flags;
+			else if(address == 0xFF44)
+				return emulator.gpu.lcdcYCoord;
+
 			return io[address - 0xFF00];
+		}
 
 		if(address >= 0xFF80 && address <= 0xFFFE)
 			return hram[address - 0xFF80];
@@ -103,7 +109,7 @@ class Memory
 
 	void loadRom(ubyte[] data) {
 		cartridge[0 .. data.length] = data;
-		cartridge[0 .. 0x100] = bootstrapRom;
+		//cartridge[0 .. 0x100] = bootstrapRom;
 	}
 }
 

@@ -3,8 +3,8 @@
 import std.experimental.logger, std.format, std.stdio, std.conv : to;
 import gbemu.emulator, gbemu.registers, gbemu.memory, gbemu.interrupts;
 
-enum fixedCycleCount = 2000;
-bool logging = false;
+enum fixedCycleCount = 200;
+bool logging = true;
 
 class Instruction {
 	string disassembly;
@@ -29,6 +29,8 @@ class Cpu
 	Instruction[256] instructions;
 	Instruction[256] extendedInstructions;
 
+	bool stopped;
+
 	this(Emulator emulator)
 	{
 		this.emulator = emulator;
@@ -41,20 +43,51 @@ class Cpu
 	}
 
 	void reset() { 
-		registers.a = 0x01;
-		registers.f = 0xb0;
-		registers.b = 0x00;
-		registers.c = 0x13;
-		registers.d = 0x00;
-		registers.e = 0xd8;
-		registers.h = 0x01;
-		registers.l = 0x4d;
+		stopped = false;
+
+		registers.af = 0x01;
+		registers.f = 0xB0;
+		registers.bc = 0x0013;
+		registers.de = 0x00D8;
+		registers.hl = 0x014D;
 		registers.pc = 0x100;
 		registers.sp = 0xFFFE;
 
 		interrupts.master = 1;
 		interrupts.enable = 0;
 		interrupts.flags = 0;
+
+		memory[0xFF05] = 0x00;
+		memory[0xFF06] = 0x00;
+		memory[0xFF07] = 0x00;
+		memory[0xFF10] = 0x80;
+		memory[0xFF11] = 0xBF;
+		memory[0xFF12] = 0xF3;
+		memory[0xFF14] = 0xBF;
+		memory[0xFF16] = 0x3F;
+		memory[0xFF17] = 0x00;
+		memory[0xFF19] = 0xBF;
+		memory[0xFF1A] = 0x7F;
+		memory[0xFF1B] = 0xFF;
+		memory[0xFF1C] = 0x9F;
+		memory[0xFF1E] = 0xBF;
+		memory[0xFF20] = 0xFF;
+		memory[0xFF21] = 0x00;
+		memory[0xFF22] = 0x00;
+		memory[0xFF23] = 0xBF;
+		memory[0xFF24] = 0x77;
+		memory[0xFF25] = 0xF3;
+		memory[0xFF26] = 0xF1;
+		memory[0xFF40] = 0x91;
+		memory[0xFF42] = 0x00;
+		memory[0xFF43] = 0x00;
+		memory[0xFF45] = 0x00;
+		memory[0xFF47] = 0xFC;
+		memory[0xFF48] = 0xFF;
+		memory[0xFF49] = 0xFF;
+		memory[0xFF4A] = 0x00;
+		memory[0xFF4B] = 0x00;
+		memory[0xFFFF] = 0x00;
 	}
 
 	void registerInstructions() {
@@ -672,12 +705,14 @@ class Cpu
 	// STOP
 	void stop(ubyte value) {
 		// TODO
+		stopped = true;
 		writeln("STOP - Not implemented");
 	}
 
 	// RLA
 	void rla() {
 		// TODO
+		stopped = true;
 		writeln("RLA - Not implemented");
 	}
 
@@ -689,6 +724,7 @@ class Cpu
 	// RRA
 	void rra() {
 		// TODO
+		stopped = true;
 		writeln("RRA - Not implemented");
 	}
 
@@ -1166,7 +1202,7 @@ class Cpu
 
 		registers.flagCarry = (value & 0x01) > 0;
 
-		registers.flagZero = value > 0;
+		registers.flagZero = value == 0;
 
 		registers.flagNegative = false;
 		registers.flagHalfCarry = false;
@@ -1222,6 +1258,9 @@ class Cpu
 	}
 
 	void doCycle() {
+		if(stopped)
+			return;
+
 		auto opcode = memory[registers.pc];
 		registers.pc++;
 
